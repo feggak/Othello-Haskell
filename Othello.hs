@@ -2,41 +2,26 @@ module Othello where
 import Data.Maybe
 
 type Pos = (Int, Int)
-data Disk = Black | White
-            deriving ( Show, Eq )
+type Board = [[Maybe Disk]]
+data Disk = White | Black deriving (Show, Eq)
 
-data Othello = Othello { board :: [[Maybe Disk]]}
-             deriving ( Show, Eq )
+blankBoard :: Int -> Board
+blankBoard n = replicate n (replicate n Nothing)
 
--- | creates a blank Othello board
-blankBoard :: Int -> Othello
-blankBoard size | even size = Othello (replicate size (replicate size Nothing))
-                | otherwise = error "Pick an even number!"
+printBoard :: Board -> IO ()
+printBoard board = putStrLn (unlines (map (map diskToChar) board))
 
-startBoard :: Int -> Othello
-startBoard size = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard size)
-                  (Just White) (a,a)) (Just Black) ((a),(a-1))) (Just Black)
-                  ((a-1),a)) (Just White) ((a-1),(a-1))
-                  where
-                    a = quot size 2
+-- | converts maybe disk to char
+diskToChar :: Maybe Disk -> Char
+diskToChar (Just White) = 'W'
+diskToChar (Just Black) = 'B'
+diskToChar Nothing = '.'
 
-printOthello :: Othello -> IO ()
-printOthello oth = putStrLn (unlines (map (map (toChar)) (board oth)))
-
-toChar :: Maybe Disk -> Char
-toChar (Just Black) = 'B'
-toChar (Just White) = 'W'
-toChar Nothing = '.'
-
-placeDisk :: Othello -> Maybe Disk -> Pos -> Othello
-placeDisk oth disk (x,y) = Othello ((board oth) !!=
-  (x,(update (board oth) disk (x,y))))
-
--- | updates the given row at the given position with the new value
-update :: [[Maybe Disk]] -> Maybe Disk -> Pos -> [Maybe Disk]
-update oth disk (x,y) = (oth!!(x)) !!= ((y), disk)
+-- | places a disk on a position on a board
+placeDisk :: Board -> Disk -> Pos -> Board
+placeDisk board d pos = undefined
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
-list !!= (i, e) | (i >= (length list)) || (i < 0) = list
+list !!= (i, e) | (i >= length list) || (i < 0) = list
                 | otherwise = take i list ++ [e] ++ drop (i+1) list
