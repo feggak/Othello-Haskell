@@ -10,12 +10,15 @@ data Othello = Othello { board :: [[Maybe Disk]]}
 
 -- | creates a blank Othello board
 blankBoard :: Int -> Othello
-blankBoard size = Othello (replicate size (replicate size Nothing))
+blankBoard size | even size = Othello (replicate size (replicate size Nothing))
+                | otherwise = error "Pick an even number!"
 
 startBoard :: Int -> Othello
-startBoard size = placeDisk (blankBoard size) (Just Black) (a, a)
+startBoard size = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard size)
+                  (Just White) (a,a)) (Just Black) ((a),(a-1))) (Just Black)
+                  ((a-1),a)) (Just White) ((a-1),(a-1))
                   where
-                    a = quot size 2 
+                    a = quot size 2
 
 printOthello :: Othello -> IO ()
 printOthello oth = putStrLn (unlines (map (map (toChar)) (board oth)))
@@ -31,7 +34,7 @@ placeDisk oth disk (x,y) = Othello ((board oth) !!=
 
 -- | updates the given row at the given position with the new value
 update :: [[Maybe Disk]] -> Maybe Disk -> Pos -> [Maybe Disk]
-update oth disk (x,y) = (oth!!(x)) !!= ((x), disk)
+update oth disk (x,y) = (oth!!(x)) !!= ((y), disk)
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
