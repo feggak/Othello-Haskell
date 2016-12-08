@@ -7,7 +7,8 @@ data Disk = White | Black deriving (Show, Eq)
 
 -- | creates a blank board
 blankBoard :: Int -> Board
-blankBoard n = replicate n (replicate n Nothing)
+blankBoard n | even n && n > 2 = replicate n (replicate n Nothing)
+             | otherwise = error "Pick an even number greater than 2!"
 
 -- | creates a board with disks in start positions
 startBoard :: Int -> Board
