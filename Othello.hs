@@ -5,21 +5,23 @@ type Pos = (Int, Int)
 type Board = [[Maybe Disk]]
 data Disk = White | Black deriving (Show, Eq)
 
+-- | creates a blank board
 blankBoard :: Int -> Board
 blankBoard n = replicate n (replicate n Nothing)
 
+-- | prints the board to the console
 printBoard :: Board -> IO ()
-printBoard board = putStrLn (unlines (map (map diskToChar) board))
+printBoard board = putStrLn (unlines (map (map toChar) board))
 
 -- | converts maybe disk to char
-diskToChar :: Maybe Disk -> Char
-diskToChar (Just White) = 'W'
-diskToChar (Just Black) = 'B'
-diskToChar Nothing = '.'
+toChar :: Maybe Disk -> Char
+toChar (Just Black) = 'B'
+toChar (Just White) = 'W'
+toChar Nothing = '.'
 
--- | places a disk on a position on a board
-placeDisk :: Board -> Disk -> Pos -> Board
-placeDisk board d pos = undefined
+placeDisk :: Board -> Maybe Disk -> Pos -> Board
+placeDisk board d (x, y) = board !!= (x, row)
+  where row = (board !! x) !!= (x, d)
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
