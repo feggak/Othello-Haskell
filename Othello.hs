@@ -9,6 +9,14 @@ data Disk = White | Black deriving (Show, Eq)
 blankBoard :: Int -> Board
 blankBoard n = replicate n (replicate n Nothing)
 
+-- | creates a board with disks in start positions
+startBoard :: Int -> Othello
+startBoard size = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard size)
+                  (Just White) (a,a)) (Just Black) ((a),(a-1))) (Just Black)
+                  ((a-1),a)) (Just White) ((a-1),(a-1))
+                  where
+                    a = quot size 2
+
 -- | prints the board to the console
 printBoard :: Board -> IO ()
 printBoard board = putStrLn (unlines (map (map toChar) board))
