@@ -10,12 +10,12 @@ blankBoard :: Int -> Board
 blankBoard n = replicate n (replicate n Nothing)
 
 -- | creates a board with disks in start positions
-startBoard :: Int -> Othello
-startBoard size = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard size)
-                  (Just White) (a,a)) (Just Black) ((a),(a-1))) (Just Black)
-                  ((a-1),a)) (Just White) ((a-1),(a-1))
+startBoard :: Int -> Board
+startBoard n = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard n)
+                  (Just White) (a, a)) (Just Black) (a, a - 1)) (Just Black)
+                  (a - 1, a)) (Just White) (a - 1, a - 1)
                   where
-                    a = quot size 2
+                    a = quot n 2
 
 -- | prints the board to the console
 printBoard :: Board -> IO ()
@@ -27,9 +27,10 @@ toChar (Just Black) = 'B'
 toChar (Just White) = 'W'
 toChar Nothing = '.'
 
+-- | places/updates a disk in a board at a given position
 placeDisk :: Board -> Maybe Disk -> Pos -> Board
 placeDisk board d (x, y) = board !!= (x, row)
-  where row = (board !! x) !!= (x, d)
+  where row = (board !! x) !!= (y, d)
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
