@@ -39,7 +39,8 @@ list !!= (i, e) | (i >= length list) || (i < 0) = list
                 | otherwise = take i list ++ [e] ++ drop (i+1) list
 
 play :: Board -> Maybe Disk -> Pos -> Board
-play b d p | isCandidate b d p = flipDisks (placeDisk b d p) d (nextTo b d p)
+play b d p | fst p < 0 || snd p < 0 || fst p > (length b)-1 || snd p > (length b)-1 = b
+           | isCandidate b d p = flipDisks (placeDisk b d p) d (nextTo b d p)
            | otherwise = b
 
 flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
@@ -65,7 +66,13 @@ getDisk b (x,y) = (b!!x)!!y
 nextTo :: Board -> Maybe Disk -> Pos -> [Pos]
 nextTo b d (x,y) = getCellsToFlip b d (x,y) (nextTo' [((b!!(fst i))!!(snd i),i) | i <- list] d)
                     where
-                      list = [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
+                      list = neighbours b [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
+
+neighbours :: Board -> [Pos] -> [Pos]
+neighbours b (x:[]) | fst x <= 0 || snd x <= 0 || fst x >= (length b) -1 || snd x >= (length b) -1 = []
+                    | otherwise = [x]
+neighbours b (x:xs) | fst x <= 0 || snd x <= 0 || fst x >= (length b) -1 || snd x >= (length b) -1 = [] ++ neighbours b xs
+                    | otherwise = [x] ++ neighbours b xs
 
 nextTo' :: [(Maybe Disk, Pos)] -> Maybe Disk -> [Pos]
 nextTo' (x:[]) d | fst x == d || fst x == Nothing = []
