@@ -38,17 +38,32 @@ placeDisk board d (x, y) = board !!= (x, row)
 list !!= (i, e) | (i >= length list) || (i < 0) = list
                 | otherwise = take i list ++ [e] ++ drop (i+1) list
 
---play :: Board -> Maybe Disk -> Pos -> Board
---play b d p | isCandidate b d p = placeDisk b d p
---           | otherwise = b
+play :: Board -> Maybe Disk -> Pos -> Board
+play b d p | isCandidate b d p = flipDisks (placeDisk b d p) d (nextTo b d p)
+           | otherwise = b
 
---isOpposite :: Board -> Maybe Disk -> Pos -> Bool
---isOpposite b d p = any (/x -> b!!(fst x)!!(snd x)) list
---                      where
---                        list = nextTo b d p
+flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
+flipDisks b d (x:[]) = placeDisk b d x
+flipDisks b d (x:xs) = flipDisks (placeDisk b d x) d xs
+
+-- || returns a list of positions of disks to flip
+getCellsToFlip :: Board -> Maybe Disk -> Pos -> [Pos] -> [Pos]
+getCellsToFlip b d (x,y) [] = []
+getCellsToFlip b d (x,y) (z:[]) = getRow b d z (fst z - x,snd z - y)
+getCellsToFlip b d (x,y) (z:zs) = getRow b d z (fst z -x, snd z - y) ++ getCellsToFlip b d (x,y) zs
+--where
+--  a = x - fst z
+--  b = y - snd z
+
+getRow :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
+getRow b d (x,y) (e,f) | d == getDisk b (x,y) = []
+                       | otherwise = [(x, y)] ++ getRow b d (x+e, y+f) (e,f)
+
+getDisk :: Board -> Pos -> Maybe Disk
+getDisk b (x,y) = (b!!x)!!y
 
 nextTo :: Board -> Maybe Disk -> Pos -> [Pos]
-nextTo b d (x,y) = nextTo' [((b!!(fst i))!!(snd i),i) | i <- list] d
+nextTo b d (x,y) = getCellsToFlip b d (x,y) (nextTo' [((b!!(fst i))!!(snd i),i) | i <- list] d)
                     where
                       list = [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
 
@@ -58,5 +73,5 @@ nextTo' (x:[]) d | fst x == d || fst x == Nothing = []
 nextTo' (x:xs) d | fst x == d || fst x == Nothing = nextTo' xs d
                  | otherwise = [snd x] ++ nextTo' xs d
 
---isCandidate :: Board -> Maybe Disk -> Pos -> Bool
---isCandidate board disk pos | (board!!x)!!y == Nothing  &&
+isCandidate :: Board -> Maybe Disk -> Pos -> Bool
+isCandidate b d (x,y) = (b!!x)!!y == Nothing && not ((nextTo b d (x,y)) == [])
