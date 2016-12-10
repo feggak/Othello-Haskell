@@ -30,18 +30,20 @@ toChar Nothing = '.'
 
 -- | places/updates a disk in a board at a given position
 placeDisk :: Board -> Maybe Disk -> Pos -> Board
-placeDisk board d (x, y) = board !!= (x, row)
-  where row = (board !! x) !!= (y, d)
+placeDisk board d (x,y) = board !!= (x,row)
+  where row = (board !! x) !!= (y,d)
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
-list !!= (i, e) | (i >= length list) || (i < 0) = list
+list !!= (i,e) | i >= length list || (i < 0) = list
                 | otherwise = take i list ++ [e] ++ drop (i+1) list
 
 play :: Board -> Maybe Disk -> Pos -> Board
-play b d p | fst p < 0 || snd p < 0 || fst p > (length b)-1 || snd p > (length b)-1 = b
-           | isCandidate b d p = flipDisks (placeDisk b d p) d (nextTo b d p)
+play b d p | isCandidate b d p = flipDisks (placeDisk b d p) d (nextTo b d p)
            | otherwise = b
+
+isLegal :: Board -> Pos -> Bool
+isLegal board (x,y) = x >= 0 && y >= 0 && x < length board && y < length board
 
 flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
 flipDisks b d (x:[]) = placeDisk b d x
@@ -50,35 +52,35 @@ flipDisks b d (x:xs) = flipDisks (placeDisk b d x) d xs
 -- || returns a list of positions of disks to flip
 getCellsToFlip :: Board -> Maybe Disk -> Pos -> [Pos] -> [Pos]
 getCellsToFlip b d (x,y) [] = []
-getCellsToFlip b d (x,y) (z:[]) = getRow b d z (fst z - x,snd z - y)
-getCellsToFlip b d (x,y) (z:zs) = getRow b d z (fst z -x, snd z - y) ++ getCellsToFlip b d (x,y) zs
+getCellsToFlip b d (x,y) (z:[]) = getRow b d z (fst z - x, snd z - y)
+getCellsToFlip b d (x,y) (z:zs) = getRow b d z (fst z - x, snd z - y) ++ getCellsToFlip b d (x,y) zs
 --where
 --  a = x - fst z
 --  b = y - snd z
 
 getRow :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
 getRow b d (x,y) (e,f) | d == getDisk b (x,y) = []
-                       | otherwise = [(x, y)] ++ getRow b d (x+e, y+f) (e,f)
+                       | otherwise = [(x,y)] ++ getRow b d (x+e, y+f) (e,f)
 
 getDisk :: Board -> Pos -> Maybe Disk
 getDisk b (x,y) = (b!!x)!!y
 
 nextTo :: Board -> Maybe Disk -> Pos -> [Pos]
-nextTo b d (x,y) = getCellsToFlip b d (x,y) (nextTo' [((b!!(fst i))!!(snd i),i) | i <- list] d)
-                    where
-                      list = neighbours b [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
+nextTo b d (x,y) = getCellsToFlip b d (x,y) (nextTo' [((b!!fst i)!!snd i,i) | i <- list] d)
+                     where
+                       list = neighbours b [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
 
 neighbours :: Board -> [Pos] -> [Pos]
-neighbours b (x:[]) | fst x <= 0 || snd x <= 0 || fst x >= (length b) -1 || snd x >= (length b) -1 = []
-                    | otherwise = [x]
-neighbours b (x:xs) | fst x <= 0 || snd x <= 0 || fst x >= (length b) -1 || snd x >= (length b) -1 = [] ++ neighbours b xs
-                    | otherwise = [x] ++ neighbours b xs
+neighbours b ((x,y):[]) | x <= 0 || y <= 0 || x >= length b -1 || y >= length b -1 = []
+                        | otherwise = [(x,y)]
+neighbours b ((x,y):xs) | x <= 0 || y <= 0 || x >= length b -1 || y >= length b -1 = [] ++ neighbours b xs
+                        | otherwise = [(x,y)] ++ neighbours b xs
 
 nextTo' :: [(Maybe Disk, Pos)] -> Maybe Disk -> [Pos]
-nextTo' (x:[]) d | fst x == d || fst x == Nothing = []
-                 | otherwise = [snd x]
-nextTo' (x:xs) d | fst x == d || fst x == Nothing = nextTo' xs d
-                 | otherwise = [snd x] ++ nextTo' xs d
+nextTo' ((x,y):[]) d | x == d || isNothing(x) = []
+                     | otherwise = [y]
+nextTo' ((x,y):xs) d | x == d || isNothing(x) = nextTo' xs d
+                     | otherwise = [y] ++ nextTo' xs d
 
 isCandidate :: Board -> Maybe Disk -> Pos -> Bool
-isCandidate b d (x,y) = (b!!x)!!y == Nothing && not ((nextTo b d (x,y)) == [])
+isCandidate b d (x,y) = isLegal b (x,y) && isNothing ((b!!x)!!y) && (nextTo b d (x,y) /= [])
