@@ -66,7 +66,7 @@ getDisk :: Board -> Pos -> Maybe Disk
 getDisk b (x,y) = (b!!x)!!y
 
 nextTo :: Board -> Maybe Disk -> Pos -> [Pos]
-nextTo b d (x,y) = getCellsToFlip b d (x,y) (nextTo' [((b!!fst i)!!snd i,i) | i <- list] d)
+nextTo b d (x,y) = getCellsToFlip b d (x,y) (nextTo' b list d)
                      where
                        list = neighbours b [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
 
@@ -76,11 +76,11 @@ neighbours b ((x,y):[]) | x <= 0 || y <= 0 || x >= length b -1 || y >= length b 
 neighbours b ((x,y):xs) | x <= 0 || y <= 0 || x >= length b -1 || y >= length b -1 = [] ++ neighbours b xs
                         | otherwise = [(x,y)] ++ neighbours b xs
 
-nextTo' :: [(Maybe Disk, Pos)] -> Maybe Disk -> [Pos]
-nextTo' ((x,y):[]) d | x == d || isNothing(x) = []
-                     | otherwise = [y]
-nextTo' ((x,y):xs) d | x == d || isNothing(x) = nextTo' xs d
-                     | otherwise = [y] ++ nextTo' xs d
+nextTo' :: Board -> [Pos] -> Maybe Disk -> [Pos]
+nextTo' b (x:[]) d | getDisk b x == d || isNothing(getDisk b x) = []
+                   | otherwise = [x]
+nextTo' b (x:xs) d | getDisk b x == d || isNothing(getDisk b x) = [] ++ nextTo' b xs d
+                   | otherwise = [x] ++ nextTo' b xs d
 
 isCandidate :: Board -> Maybe Disk -> Pos -> Bool
 isCandidate b d (x,y) = isLegal b (x,y) && isNothing ((b!!x)!!y) && (nextTo b d (x,y) /= [])
