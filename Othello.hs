@@ -2,47 +2,61 @@ module Othello where
 import Data.Maybe
 
 type Pos = (Int, Int)
-data Disk = Black | White
-            deriving ( Show, Eq )
+type Board = [[Maybe Disk]]
+data Disk = White | Black deriving (Show, Eq)
 
-data Othello = Othello { board :: [[Maybe Disk]]}
-             deriving ( Show, Eq )
+-- | creates a blank board
+blankBoard :: Int -> Board
+blankBoard n | even n && n > 2 = replicate n (replicate n Nothing)
+             | otherwise = error "Pick an even number greater than 2!"
 
--- | creates a blank Othello board
-blankBoard :: Int -> Othello
-blankBoard size | even size && size > 2 = Othello (replicate size (replicate size Nothing))
-                | otherwise = error "Pick an even number greater than 2!"
-
-startBoard :: Int -> Othello
-startBoard size = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard size)
-                  (Just White) (a,a)) (Just Black) ((a),(a-1))) (Just Black)
-                  ((a-1),a)) (Just White) ((a-1),(a-1))
+-- | creates a board with disks in start positions
+startBoard :: Int -> Board
+startBoard n = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard n)
+                  (Just White) (a, a)) (Just Black) (a, a - 1)) (Just Black)
+                  (a - 1, a)) (Just White) (a - 1, a - 1)
                   where
-                    a = quot size 2
+                    a = quot n 2
 
-printOthello :: Othello -> IO ()
-printOthello oth = putStrLn (unlines (map (map (toChar)) (board oth)))
+-- | prints the board to the console
+printBoard :: Board -> IO ()
+printBoard board = putStrLn (unlines (map (map toChar) board))
 
+-- | converts maybe disk to char
 toChar :: Maybe Disk -> Char
 toChar (Just Black) = 'B'
 toChar (Just White) = 'W'
 toChar Nothing = '.'
 
-placeDisk :: Othello -> Maybe Disk -> Pos -> Othello
-placeDisk oth disk (x,y) = Othello ((board oth) !!=
-  (x,(update (board oth) disk (x,y))))
-
--- | updates the given row at the given position with the new value
-update :: [[Maybe Disk]] -> Maybe Disk -> Pos -> [Maybe Disk]
-update oth disk (x,y) = (oth!!(x)) !!= ((y), disk)
-
--- winner :: Disk -> Disk -> Disk
+-- | places/updates a disk in a board at a given position
+placeDisk :: Board -> Maybe Disk -> Pos -> Board
+placeDisk board d (x, y) = board !!= (x, row)
+  where row = (board !! x) !!= (y, d)
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
-list !!= (i, e) | (i >= (length list)) || (i < 0) = list
+list !!= (i, e) | (i >= length list) || (i < 0) = list
                 | otherwise = take i list ++ [e] ++ drop (i+1) list
 
-playerPlace :: Othello -> Just Disk -> Pos -> Othello
-playerPlace oth disk pos | pos /= Nothing = error "Must place on empty cell!"
-                         | nextTo pos && 
+--play :: Board -> Maybe Disk -> Pos -> Board
+--play b d p | isCandidate b d p = placeDisk b d p
+--           | otherwise = b
+
+--isOpposite :: Board -> Maybe Disk -> Pos -> Bool
+--isOpposite b d p = any (/x -> b!!(fst x)!!(snd x)) list
+--                      where
+--                        list = nextTo b d p
+
+nextTo :: Board -> Maybe Disk -> Pos -> [Pos]
+nextTo b d (x,y) = nextTo' [((b!!(fst i))!!(snd i),i) | i <- list] d
+                    where
+                      list = [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
+
+nextTo' :: [(Maybe Disk, Pos)] -> Maybe Disk -> [Pos]
+nextTo' (x:[]) d | fst x == d || fst x == Nothing = []
+                 | otherwise = [snd x]
+nextTo' (x:xs) d | fst x == d || fst x == Nothing = nextTo' xs d
+                 | otherwise = [snd x] ++ nextTo' xs d
+
+--isCandidate :: Board -> Maybe Disk -> Pos -> Bool
+--isCandidate board disk pos | (board!!x)!!y == Nothing  &&
