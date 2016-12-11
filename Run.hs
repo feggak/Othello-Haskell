@@ -5,7 +5,9 @@ import Othello
 run :: IO ()
 run = do
   putStrLn "Welcome to Othello!"
-  loop (startBoard 4) White Black
+  putStr "Pick a board size: "
+  size <- getLine
+  loop (startBoard (read size :: Int)) White Black
 
 loop :: Board -> Disk -> Disk -> IO ()
 loop board d1 d2 =
