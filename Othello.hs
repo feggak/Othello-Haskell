@@ -46,10 +46,10 @@ placeDisk b d (x,y) = b !!= (x,row)
 list !!= (i,e) | i >= length list || (i < 0) = list
                | otherwise = take i list ++ [e] ++ drop (i+1) list
 
-play :: Board -> Maybe Disk -> Pos -> Board
+play :: Board -> Maybe Disk -> Pos -> Maybe Board
 play b d p | isCandidate b d p =
-             flipDisks (placeDisk b d p) d (cellsToFlip b d p)
-           | otherwise = b
+             Just (flipDisks (placeDisk b d p) d (cellsToFlip b d p))
+           | otherwise = Nothing
 
 flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
 flipDisks b d (x:[]) = placeDisk b d x

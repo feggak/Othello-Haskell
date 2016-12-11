@@ -6,8 +6,13 @@ run :: IO ()
 run = do
   putStrLn "Welcome to Othello!"
   putStr "Pick a board size: "
-  size <- getLine
-  loop (startBoard (read size :: Int)) White Black
+  input <- getLine
+  let size = (read input :: Int)
+  if even size then do
+    loop (startBoard size) White Black
+  else do
+    putStrLn "Pick an even number greater than 2!"
+    run
 
 loop :: Board -> Disk -> Disk -> IO ()
 loop board d1 d2 =
@@ -21,7 +26,11 @@ loop board d1 d2 =
     posY <- getLine
     let newBoard = play board (Just d1)
                    ((read posY :: Int) - 1, (read posX :: Int) - 1)
-    loop newBoard d2 d1
+    case newBoard of
+      Nothing -> do
+        putStrLn "Invalid move, try again!"
+        loop board d1 d2
+      Just b -> loop b d2 d1
   else do
     if canPlay board (Just d2) then do
       putStr (show d1)
