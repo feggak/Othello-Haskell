@@ -95,3 +95,35 @@ isCandidate b d (x,y) = isLegal b (x,y) &&
 
 isLegal :: Board -> Pos -> Bool
 isLegal board (x,y) = x >= 0 && y >= 0 && x < length board && y < length board
+
+canPlay :: Board -> Disk -> Bool
+canPlay board d = undefined
+
+blanks :: Board -> [Pos]
+blanks b = zip (yPos (rowBlanks b))
+               (whereBlank (xValuePos b))
+
+-- | returns a list of all the blanks y-positions
+yPos :: [Int] -> [Int]
+yPos list = concat ([(replicate (list!!i) i) | i <- [0..8]])
+
+-- | returns a list of the number of blanks from all the rows
+rowBlanks :: [[Maybe Disk]] -> [Int]
+rowBlanks (x:[]) = [length (whereBlank (zip x [0..8]))]
+rowBlanks (x:xs) = [length (whereBlank (zip x [0..8]))] ++ rowBlanks xs
+
+-- | creates a total list of pairs containing a Maybe Int and the x position
+xValuePos :: [[Maybe Disk]] -> [(Maybe Disk, Int)]
+xValuePos (x:[]) = zip x [0..8]
+xValuePos (x:xs) = zip x [0..8] ++ xValuePos xs
+
+-- | takes a list of pairs (Maybe Int and pos) and returns a list of the pos
+-- | of the Maybe Ints that are empty (Nothing)
+whereBlank :: [(Maybe Disk, Int)] -> [Int]
+whereBlank (x:[]) = if (fst x) == Nothing then [(snd x)]
+                    else []
+whereBlank (x:xs) = if (fst x) == Nothing then [(snd x)] ++ whereBlank xs
+                    else whereBlank xs
+
+winner :: Board -> Maybe Disk
+winner board = undefined
