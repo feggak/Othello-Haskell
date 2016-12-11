@@ -12,7 +12,8 @@ otherDisk (Just Black) = Just White
 
 -- | creates a blank board
 blankBoard :: Int -> Board
-blankBoard n | even n && n > 2 = [[(Nothing, (i,j)) | j <- [0..n-1]] | i <- [0..n-1]]
+blankBoard n | even n && n > 2 =
+                [[(Nothing, (i,j)) | j <- [0..n-1]] | i <- [0..n-1]]
              | otherwise = error "Pick an even number greater than 2!"
 
 -- | creates a board with disks in start positions
@@ -98,11 +99,18 @@ isCandidate b d (x,y) = isLegal b (x,y) &&
 isLegal :: Board -> Pos -> Bool
 isLegal board (x,y) = x >= 0 && y >= 0 && x < length board && y < length board
 
-blanks :: Board -> [(Maybe Disk, Pos)]
-blanks b = concat (filter (fst == Nothing) b)
+blanks :: Board -> [Pos]
+blanks (x:[]) = blanks' x
+blanks (x:xs) = concat (blanks' x : [blanks xs])
 
-canPlay :: Board -> Disk -> Bool
-canPlay b d = undefined
+blanks' :: [(Maybe Disk, Pos)] -> [Pos]
+blanks' (x:[]) | isNothing(fst x) = [snd x]
+               | otherwise = []
+blanks' (x:xs) | isNothing(fst x) = snd x : blanks' xs
+               | otherwise = [] ++ blanks' xs
+
+canPlay :: Board -> Maybe Disk -> Bool
+canPlay b d = any (\x -> isCandidate b d x) (blanks b)
 
 winner :: Board -> Maybe Disk
 winner board = undefined
