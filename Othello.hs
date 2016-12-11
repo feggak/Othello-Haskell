@@ -71,7 +71,7 @@ getRow b d (x,y) (e,f) | not (isOkRow b d (x,y) (e,f)) = []
                        | otherwise = (x,y) : getRow b d (x+e, y+f) (e,f)
 
 isOkRow :: Board -> Maybe Disk -> Pos -> Pos -> Bool
-isOkRow b d (x,y) (e,f) | not (isLegal b (x+e,y+f)) = False
+isOkRow b d (x,y) (e,f) | not (isLegal b (x,y)) = False
                         | isNothing(getDisk b (x,y)) = False
                         | d == getDisk b (x,y) = True
                         | otherwise = isOkRow b d (x+e, y+f) (e,f)
