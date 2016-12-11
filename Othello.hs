@@ -28,13 +28,13 @@ startBoard n = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard n)
 printBoard :: Board -> IO ()
 printBoard b = putStrLn (unlines (map (map toChar) board))
   where
-    board = (map (map fst) b)
+    board = map (map fst) b
 
 -- | converts maybe disk to char
 toChar :: Maybe Disk -> Char
-toChar (Just Black) = 'B'
-toChar (Just White) = 'W'
-toChar Nothing = '.'
+toChar (Just Black) = '◯'
+toChar (Just White) = '●'
+toChar Nothing = '⋅'
 
 -- | places/updates a disk in a board at a given position
 placeDisk :: Board -> Maybe Disk -> Pos -> Board
@@ -110,10 +110,11 @@ blanks' (x:xs) | isNothing(fst x) = snd x : blanks' xs
                | otherwise = [] ++ blanks' xs
 
 canPlay :: Board -> Maybe Disk -> Bool
-canPlay b d = any (\x -> isCandidate b d x) (blanks b)
+canPlay b d = any (isCandidate b d) (blanks b)
 
-winner :: Board -> Maybe Disk
-winner board = Just White
+winner :: Board -> Disk
+winner board | winner' board (Just White) > winner' board (Just Black) = White
+winner board = Black
 
 winner' :: Board -> Maybe Disk -> Int
 winner' (x:[]) d = length (filter ((==d).fst) x)
