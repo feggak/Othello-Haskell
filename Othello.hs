@@ -41,10 +41,11 @@ placeDisk board d (x,y) = board !!= (x,row)
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
 list !!= (i,e) | i >= length list || (i < 0) = list
-                | otherwise = take i list ++ [e] ++ drop (i+1) list
+               | otherwise = take i list ++ [e] ++ drop (i+1) list
 
 play :: Board -> Maybe Disk -> Pos -> Board
-play b d p | isCandidate b d p = flipDisks (placeDisk b d p) d (cellsToFlip b d p)
+play b d p | isCandidate b d p =
+             flipDisks (placeDisk b d p) d (cellsToFlip b d p)
            | otherwise = b
 
 flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
@@ -53,43 +54,44 @@ flipDisks b d (x:xs) = flipDisks (placeDisk b d x) d xs
 
 -- || returns a list of positions of disks to flip
 cellsToFlip :: Board -> Maybe Disk -> Pos -> [Pos]
-cellsToFlip b d pos = cellsToFlip' b d pos list
-                        where
-                          list = neighbours b d pos
+cellsToFlip b d pos = cellsToFlip' b d pos (neighbours b d pos)
 
 cellsToFlip' :: Board -> Maybe Disk -> Pos -> [Pos] -> [Pos]
 cellsToFlip' b d (x,y) [] = []
 cellsToFlip' b d (x,y) (z:[]) = getRow b d z (fst z - x, snd z - y)
-cellsToFlip' b d (x,y) (z:zs) = getRow b d z (fst z - x, snd z - y) ++ cellsToFlip' b d (x,y) zs
+cellsToFlip' b d (x,y) (z:zs) = getRow b d z (fst z - x, snd z - y)
+                                ++ cellsToFlip' b d (x,y) zs
 
 getRow :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
 getRow b d (x,y) (e,f) | not (isOkRow b d (x,y) (e,f)) = []
                        | d == getDisk b (x,y) = []
-                       | otherwise = [(x,y)] ++ getRow b d (x+e, y+f) (e,f)
-
-getRowFake :: Board -> Maybe Disk -> Pos -> Pos -> Bool
-getRowFake b d (x,y) (e,f) | getDisk b (x,y) == Nothing = False
-                           | d == getDisk b (x,y) = True
-                           | otherwise = getRowFake b d (x+e, y+f) (e,f)
+                       | otherwise = (x,y) : getRow b d (x+e, y+f) (e,f)
 
 isOkRow :: Board -> Maybe Disk -> Pos -> Pos -> Bool
 isOkRow b d (x,y) (e,f) | not (isLegal b (x+e,y+f)) = False
-                        | otherwise = getRowFake b d (x,y) (e,f)
+                        | isNothing(getDisk b (x,y)) = False
+                        | d == getDisk b (x,y) = True
+                        | otherwise = isOkRow b d (x+e, y+f) (e,f)
 
 getDisk :: Board -> Pos -> Maybe Disk
 getDisk b (x,y) = (b!!x)!!y
 
 neighbours :: Board -> Maybe Disk -> Pos -> [Pos]
-neighbours b d (x,y) = neighbours' b d [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
+neighbours b d (x,y) = neighbours' b d
+                       [(i,j) | i <- [x+1, x, x-1], j <- [y+1, y, y-1]]
 
 neighbours' :: Board -> Maybe Disk -> [Pos] -> [Pos]
-neighbours' b d (x:[]) | isLegal b x && getDisk b x == otherDisk(d) = [x]
+neighbours' b d (x:[]) | isLegal b x &&
+                         getDisk b x == otherDisk d = [x]
                        | otherwise = []
-neighbours' b d (x:xs) | isLegal b x && getDisk b x == otherDisk(d) = [x] ++ neighbours' b d xs
+neighbours' b d (x:xs) | isLegal b x &&
+                         getDisk b x == otherDisk d = x : neighbours' b d xs
                        | otherwise = [] ++ neighbours' b d xs
 
 isCandidate :: Board -> Maybe Disk -> Pos -> Bool
-isCandidate b d (x,y) = isLegal b (x,y) && isNothing (getDisk b (x,y)) && (cellsToFlip b d (x,y) /= [])
+isCandidate b d (x,y) = isLegal b (x,y) &&
+                        isNothing (getDisk b (x,y)) &&
+                        cellsToFlip b d (x,y) /= []
 
 isLegal :: Board -> Pos -> Bool
 isLegal board (x,y) = x >= 0 && y >= 0 && x < length board && y < length board
