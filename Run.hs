@@ -20,5 +20,12 @@ loop board d1 d2 =
     let newBoard = play board (Just d1)
                    ((read posY :: Int) - 1, (read posX :: Int) - 1)
     loop newBoard d2 d1
-  else
-    loop newBoard d2 d1
+  else do
+    if canPlay board (Just d2) then do
+      putStr (show d1)
+      putStrLn " can't make a move!"
+      loop board d2 d1
+    else do
+      printBoard board
+      putStr "Game is over! Winner is "
+      putStrLn (show (winner board))

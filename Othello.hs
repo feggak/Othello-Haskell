@@ -113,4 +113,8 @@ canPlay :: Board -> Maybe Disk -> Bool
 canPlay b d = any (\x -> isCandidate b d x) (blanks b)
 
 winner :: Board -> Maybe Disk
-winner board = undefined
+winner board = Just White
+
+winner' :: Board -> Maybe Disk -> Int
+winner' (x:[]) d = length (filter ((==d).fst) x)
+winner' (x:xs) d = length (filter ((==d).fst) x) + winner' xs d
