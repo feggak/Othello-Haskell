@@ -3,7 +3,7 @@ module Othello where
 import Data.Maybe
 
 type Pos = (Int, Int)
-type Board = [[Maybe Disk]]
+type Board = [[(Maybe Disk, Pos)]]
 data Disk = White | Black deriving (Show, Eq)
 
 otherDisk :: Maybe Disk -> Maybe Disk
@@ -12,7 +12,7 @@ otherDisk (Just Black) = Just White
 
 -- | creates a blank board
 blankBoard :: Int -> Board
-blankBoard n | even n && n > 2 = replicate n (replicate n Nothing)
+blankBoard n | even n && n > 2 = [[(Nothing, (i,j)) | j <- [0..n-1]] | i <- [0..n-1]]
              | otherwise = error "Pick an even number greater than 2!"
 
 -- | creates a board with disks in start positions
@@ -25,7 +25,9 @@ startBoard n = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard n)
 
 -- | prints the board to the console
 printBoard :: Board -> IO ()
-printBoard board = putStrLn (unlines (map (map toChar) board))
+printBoard b = putStrLn (unlines (map (map toChar) board))
+  where
+    board = (map (map fst) b)
 
 -- | converts maybe disk to char
 toChar :: Maybe Disk -> Char
@@ -35,8 +37,8 @@ toChar Nothing = '.'
 
 -- | places/updates a disk in a board at a given position
 placeDisk :: Board -> Maybe Disk -> Pos -> Board
-placeDisk board d (x,y) = board !!= (x,row)
-  where row = (board !! x) !!= (y,d)
+placeDisk b d (x,y) = b !!= (x,row)
+  where row = (b !! x) !!= (y,(d,(x,y)))
 
 -- | updates the given list with the new value at the given index
 (!!=) :: [a] -> (Int, a) -> [a]
@@ -74,7 +76,7 @@ isOkRow b d (x,y) (e,f) | not (isLegal b (x+e,y+f)) = False
                         | otherwise = isOkRow b d (x+e, y+f) (e,f)
 
 getDisk :: Board -> Pos -> Maybe Disk
-getDisk b (x,y) = (b!!x)!!y
+getDisk b (x,y) = fst((b!!x)!!y)
 
 neighbours :: Board -> Maybe Disk -> Pos -> [Pos]
 neighbours b d (x,y) = neighbours' b d
@@ -96,34 +98,11 @@ isCandidate b d (x,y) = isLegal b (x,y) &&
 isLegal :: Board -> Pos -> Bool
 isLegal board (x,y) = x >= 0 && y >= 0 && x < length board && y < length board
 
+blanks :: Board -> [(Maybe Disk, Pos)]
+blanks b = concat (filter (fst == Nothing) b)
+
 canPlay :: Board -> Disk -> Bool
-canPlay board d = undefined
-
-blanks :: Board -> [Pos]
-blanks b = zip (yPos (rowBlanks b))
-               (whereBlank (xValuePos b))
-
--- | returns a list of all the blanks y-positions
-yPos :: [Int] -> [Int]
-yPos list = concat ([(replicate (list!!i) i) | i <- [0..8]])
-
--- | returns a list of the number of blanks from all the rows
-rowBlanks :: [[Maybe Disk]] -> [Int]
-rowBlanks (x:[]) = [length (whereBlank (zip x [0..8]))]
-rowBlanks (x:xs) = [length (whereBlank (zip x [0..8]))] ++ rowBlanks xs
-
--- | creates a total list of pairs containing a Maybe Int and the x position
-xValuePos :: [[Maybe Disk]] -> [(Maybe Disk, Int)]
-xValuePos (x:[]) = zip x [0..8]
-xValuePos (x:xs) = zip x [0..8] ++ xValuePos xs
-
--- | takes a list of pairs (Maybe Int and pos) and returns a list of the pos
--- | of the Maybe Ints that are empty (Nothing)
-whereBlank :: [(Maybe Disk, Int)] -> [Int]
-whereBlank (x:[]) = if (fst x) == Nothing then [(snd x)]
-                    else []
-whereBlank (x:xs) = if (fst x) == Nothing then [(snd x)] ++ whereBlank xs
-                    else whereBlank xs
+canPlay b d = undefined
 
 winner :: Board -> Maybe Disk
 winner board = undefined
