@@ -62,11 +62,6 @@ cellsToFlip' b d (x,y) [] = []
 cellsToFlip' b d (x,y) (z:[]) = getRow b d z (fst z - x, snd z - y)
 cellsToFlip' b d (x,y) (z:zs) = getRow b d z (fst z - x, snd z - y) ++ cellsToFlip' b d (x,y) zs
 
---cellsToFlip' b d (x,y) (z:[]) | isOkRow b d z (fst z - x, snd z - y) = getRow b d z (fst z - x, snd z - y)
---                              | otherwise = []
---cellsToFlip' b d (x,y) (z:zs) | isOkRow b d z (fst z - x, snd z - y) = getRow b d z (fst z - x, snd z - y) ++ cellsToFlip' b d (x,y) zs
---                              | otherwise = []
-
 getRow :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
 getRow b d (x,y) (e,f) | not (isOkRow b d (x,y) (e,f)) = []
                        | d == getDisk b (x,y) = []
