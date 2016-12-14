@@ -18,6 +18,7 @@ instance Arbitrary Disk where
   arbitrary = frequency [(5, return Black), (5, return White)]
 
 -- | an instance for generating Arbitrary Board
+-- | parts from Sudoku lab
 instance Arbitrary Board where
   arbitrary =
     do board <- sequence [ sequence [ disk | j <- [0..7] ] | i <- [0..7] ]

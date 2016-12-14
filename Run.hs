@@ -7,6 +7,7 @@ import OthelloUtils
 import Data.Maybe
 import System.Console.ANSI hiding (White, Black)
 
+-- | first functiion to be run, here you choose the size of the game board
 run :: IO ()
 run = do
   setTitle "Othello Game"
@@ -27,6 +28,7 @@ run = do
     setSGR [Reset]
     run
 
+-- | main game loop, asks for input and alternates turns for players
 loop :: Board -> Disk -> Disk -> IO ()
 loop board d1 d2
   | canPlay board (Just d1) = do
@@ -75,6 +77,7 @@ printBoard b = putStrLn (unlines (map (map toChar) board))
   where
     board = map (map fst) (mtrx b)
 
+-- | prints the player to the console
 printPlayer :: Disk -> IO ()
 printPlayer d =
   if d == White then do

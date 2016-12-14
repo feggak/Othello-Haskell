@@ -37,5 +37,6 @@ prop_flipDisk' b d (x:xs) | getDisk b x == d || isNothing(getDisk b x)
                             = prop_flipDisk' b d xs
                           | otherwise = False
 
+-- | checks if positions returned from the blanks method are actually blank
 prop_blanks :: Board -> Bool
 prop_blanks b = all (isNothing . getDisk b) (blanks (mtrx b))
