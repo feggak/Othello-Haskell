@@ -1,16 +1,36 @@
 module Othello where
 
 import OthelloUtils
+import Test.QuickCheck
+import Data.List.Split
 import Data.Maybe
 
 type Pos = (Int, Int)
-type Board = [[(Maybe Disk, Pos)]]
+data Board = Board { mtrx :: [[(Maybe Disk, Pos)]]} deriving (Show, Eq)
 data Disk = White | Black deriving (Show, Eq)
+
+-- | generates an arbitrary cell in a Sudoku
+disk :: Gen (Maybe Disk)
+disk = frequency [(7, return Nothing),
+                  (3, do elements [(Just n) | n <- [Black, White]])]
+
+-- | an instance for generating Arbitrary Sudokus
+instance Arbitrary Disk where
+  arbitrary =
+    do frequency [(5, return Black), (5, return White)]
+
+-- | an instance for generating Arbitrary Sudokus
+instance Arbitrary Board where
+  arbitrary =
+    do board <- (sequence [ sequence [ disk | j <- [1..9] ] | i <- [1..9] ])
+       return (Board (chunksOf (length board) (zip (concat board) pos)))
+       where
+         pos = [(i,j) | i <- [1..9], j <- [1..9]]
 
 -- | creates a blank board
 blankBoard :: Int -> Board
 blankBoard n | even n && n > 2 =
-                [[(Nothing, (i,j)) | j <- [0..n-1]] | i <- [0..n-1]]
+                Board [[(Nothing, (i,j)) | j <- [0..n-1]] | i <- [0..n-1]]
              | otherwise = error "Pick an even number greater than 2!"
 
 -- | creates a board with disks in start positions
@@ -25,7 +45,7 @@ startBoard n = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard n)
 printBoard :: Board -> IO ()
 printBoard b = putStrLn (unlines (map (map toChar) board))
   where
-    board = map (map fst) b
+    board = map (map fst) (mtrx b)
 
 -- | converts maybe disk to char
 toChar :: Maybe Disk -> Char
@@ -35,7 +55,7 @@ toChar Nothing = '⋅'
 
 -- | returns the disk att the given position
 getDisk :: Board -> Pos -> Maybe Disk
-getDisk b (x,y) = fst((b!!x)!!y)
+getDisk b (x,y) = fst(( (mtrx b) !! x ) !! y)
 
 -- | returns opposite color of given disk
 otherDisk :: Maybe Disk -> Maybe Disk
@@ -51,8 +71,8 @@ play b d p | isCandidate b d p =
 
 -- | places/updates a disk in a board at a given position
 placeDisk :: Board -> Maybe Disk -> Pos -> Board
-placeDisk b d (x,y) = b !!= (x,row)
-  where row = (b !! x) !!= (y,(d,(x,y)))
+placeDisk b d (x,y) = Board ( (mtrx b) !!= (x,row) )
+  where row = ( (mtrx b) !! x) !!= (y, (d, (x,y)))
 
 -- | flips the disks to given color in positions given
 flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
@@ -105,10 +125,10 @@ isCandidate b d (x,y) = isLegal b (x,y) &&
 
 -- | checks if the given position is inside board bounds
 isLegal :: Board -> Pos -> Bool
-isLegal board (x,y) = x >= 0 && y >= 0 && x < length board && y < length board
+isLegal b (x,y) = x >= 0 && y >= 0 && x < length (mtrx b) && y < length (mtrx b)
 
 -- | returns all blank positions on the board
-blanks :: Board -> [Pos]
+blanks :: [[(Maybe Disk, Pos)]] -> [Pos]
 blanks (x:[]) = blanks' x
 blanks (x:xs) = concat (blanks' x : [blanks xs])
 
@@ -120,14 +140,14 @@ blanks' (x:xs) | isNothing(fst x) = snd x : blanks' xs
 
 -- | checks if there is a valid move to be done for given color
 canPlay :: Board -> Maybe Disk -> Bool
-canPlay b d = any (isCandidate b d) (blanks b)
+canPlay b d = any (isCandidate b d) (blanks (mtrx b) )
 
 -- | returns the color with most disks on the board
 winner :: Board -> Maybe Disk
-winner board | winner' board (Just White) > winner' board (Just Black) = Just White
-winner board | winner' board (Just White) < winner' board (Just Black) = Just Black
-winner board = Nothing
+winner b | winner' (mtrx b) (Just White) > winner' (mtrx b) (Just Black) = Just White
+winner b | winner' (mtrx b) (Just White) < winner' (mtrx b) (Just Black) = Just Black
+winner b = Nothing
 
-winner' :: Board -> Maybe Disk -> Int
+winner' :: [[(Maybe Disk, Pos)]] -> Maybe Disk -> Int
 winner' (x:[]) d = length (filter ((==d).fst) x)
 winner' (x:xs) d = length (filter ((==d).fst) x) + winner' xs d
