@@ -2,6 +2,7 @@ module Run where
 
 import Othello
 import OthelloTypes
+import OthelloUtils
 
 import Data.Maybe
 import System.Console.ANSI hiding (White, Black)
@@ -31,18 +32,10 @@ loop board d1 d2
   | canPlay board (Just d1) = do
     putStrLn ""
     printBoard board
-    if d1 == White then do
-      setSGR [SetSwapForegroundBackground True]
-      putStr (show d1)
-      setSGR [Reset]
-    else putStr (show d1)
+    printPlayer d1
     putStr " horizontal pos: "
     posX <- getLine
-    if d1 == White then do
-      setSGR [SetSwapForegroundBackground True]
-      putStr (show d1)
-      setSGR [Reset]
-    else putStr (show d1)
+    printPlayer d1
     putStr " vertical pos: "
     posY <- getLine
     let newBoard = play board (Just d1) (
@@ -69,10 +62,23 @@ loop board d1 d2
     setSGR [SetColor Foreground Vivid Green]
     putStrLn "Game is over!"
     setSGR [Reset]
-    if (isNothing(winner board)) then do
-      putStr "It's a tie!"
+    if isNothing(winner board) then putStr "It's a tie!"
     else do
       putStr "Winner is "
       setSGR [SetConsoleIntensity BoldIntensity]
       print (fromJust(winner board))
       setSGR [Reset]
+
+-- | prints the board to the console
+printBoard :: Board -> IO ()
+printBoard b = putStrLn (unlines (map (map toChar) board))
+  where
+    board = map (map fst) (mtrx b)
+
+printPlayer :: Disk -> IO ()
+printPlayer d =
+  if d == White then do
+    setSGR [SetSwapForegroundBackground True]
+    putStr (show d)
+    setSGR [Reset]
+  else putStr (show d)

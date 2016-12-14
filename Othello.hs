@@ -3,30 +3,8 @@ module Othello where
 import OthelloUtils
 import OthelloTypes
 
-import Test.QuickCheck
-import Data.List.Split
 import System.Random
 import Data.Maybe
-
--- | generates an arbitrary disk in an Othello
-disk :: Gen (Maybe Disk)
-disk = frequency [(7, return Nothing),
-                  (3, do elements [(Just n) | n <- [Black, White]])]
-
--- | an instance for generating Arbitrary Disk
-instance Arbitrary Disk where
-  arbitrary =
-    do frequency [(5, return Black), (5, return White)]
-
--- | an instance for generating Arbitrary Board
-instance Arbitrary Board where
-  arbitrary =
-    do g <- newStdGen
-       board <- (sequence [ sequence [ disk | j <- [0..m] ] | i <- [0..m] ])
-       return (Board (chunksOf (length board) (zip (concat board) pos)))
-       where
-         m = randomR (2, 16) g
-         pos = [(i,j) | i <- [0..m], j <- [0..m]]
 
 -- | creates a blank board
 blankBoard :: Int -> Board
@@ -42,28 +20,6 @@ startBoard n = placeDisk (placeDisk (placeDisk (placeDisk (blankBoard n)
                   where
                     a = quot n 2
 
--- | prints the board to the console
-printBoard :: Board -> IO ()
-printBoard b = putStrLn (unlines (map (map toChar) board))
-  where
-    board = map (map fst) (mtrx b)
-
--- | converts maybe disk to char
-toChar :: Maybe Disk -> Char
-toChar (Just Black) = '◯'
-toChar (Just White) = '●'
-toChar Nothing = '⋅'
-
--- | returns the disk att the given position
-getDisk :: Board -> Pos -> Maybe Disk
-getDisk b (x,y) | isLegal b (x,y) = fst(( (mtrx b) !! x ) !! y)
-                | otherwise = Nothing
-
--- | returns opposite color of given disk
-otherDisk :: Maybe Disk -> Maybe Disk
-otherDisk (Just White) = Just Black
-otherDisk (Just Black) = Just White
-
 -- | places a disk and flips all affected disks, runs one round of the game
 -- | if the move is not valid, Nothing is returned
 play :: Board -> Maybe Disk -> Pos -> Maybe Board
@@ -71,10 +27,15 @@ play b d p | isCandidate b d p =
              Just (flipDisks (placeDisk b d p) d (cellsToFlip b d p))
            | otherwise = Nothing
 
+-- | returns the disk att the given position
+getDisk :: Board -> Pos -> Maybe Disk
+getDisk b (x,y) | isLegal b (x,y) = fst(( mtrx b !! x ) !! y)
+                | otherwise = Nothing
+
 -- | places/updates a disk in a board at a given position
 placeDisk :: Board -> Maybe Disk -> Pos -> Board
-placeDisk b d (x,y) = Board ( (mtrx b) !!= (x,row) )
-  where row = ( (mtrx b) !! x) !!= (y, (d, (x,y)))
+placeDisk b d (x,y) = Board ( mtrx b !!= (x,row) )
+  where row = ( mtrx b !! x) !!= (y, (d, (x,y)))
 
 -- | flips the disks to given color in positions given
 flipDisks :: Board -> Maybe Disk -> [Pos] -> Board
@@ -87,16 +48,16 @@ cellsToFlip b d pos = cellsToFlip' b d pos (neighbours b d pos)
 
 cellsToFlip' :: Board -> Maybe Disk -> Pos -> [Pos] -> [Pos]
 cellsToFlip' b d (x,y) [] = []
-cellsToFlip' b d (x,y) (z:[]) = getRow b d z (fst z - x, snd z - y)
-cellsToFlip' b d (x,y) (z:zs) = getRow b d z (fst z - x, snd z - y)
+cellsToFlip' b d (x,y) (z:[]) = rowToFlip b d z (fst z - x, snd z - y)
+cellsToFlip' b d (x,y) (z:zs) = rowToFlip b d z (fst z - x, snd z - y)
                                 ++ cellsToFlip' b d (x,y) zs
 
 -- | takes a position, a color and a direction (as simple pos)
 -- | returns the row of disks to flip in that direction
-getRow :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
-getRow b d (x,y) (e,f) | not (isOkRow b d (x,y) (e,f)) = []
+rowToFlip :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
+rowToFlip b d (x,y) (e,f) | not (isOkRow b d (x,y) (e,f)) = []
                        | d == getDisk b (x,y) = []
-                       | otherwise = (x,y) : getRow b d (x+e, y+f) (e,f)
+                       | otherwise = (x,y) : rowToFlip b d (x+e, y+f) (e,f)
 
 -- | checks if there is a valid row in given direction
 isOkRow :: Board -> Maybe Disk -> Pos -> Pos -> Bool
@@ -146,8 +107,10 @@ canPlay b d = any (isCandidate b d) (blanks (mtrx b) )
 
 -- | returns the color with most disks on the board
 winner :: Board -> Maybe Disk
-winner b | winner' (mtrx b) (Just White) > winner' (mtrx b) (Just Black) = Just White
-winner b | winner' (mtrx b) (Just White) < winner' (mtrx b) (Just Black) = Just Black
+winner b | winner' (mtrx b) (Just White)
+           > winner' (mtrx b) (Just Black) = Just White
+winner b | winner' (mtrx b) (Just White)
+           < winner' (mtrx b) (Just Black) = Just Black
 winner b = Nothing
 
 winner' :: [[(Maybe Disk, Pos)]] -> Maybe Disk -> Int
