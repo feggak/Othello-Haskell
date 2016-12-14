@@ -1,6 +1,8 @@
 module Run where
 
 import Othello
+import OthelloTypes
+
 import Data.Maybe
 import System.Console.ANSI hiding (White, Black)
 

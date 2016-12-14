@@ -1,31 +1,32 @@
 module Othello where
 
 import OthelloUtils
+import OthelloTypes
+
 import Test.QuickCheck
 import Data.List.Split
+import System.Random
 import Data.Maybe
 
-type Pos = (Int, Int)
-data Board = Board { mtrx :: [[(Maybe Disk, Pos)]]} deriving (Show, Eq)
-data Disk = White | Black deriving (Show, Eq)
-
--- | generates an arbitrary cell in a Sudoku
+-- | generates an arbitrary disk in an Othello
 disk :: Gen (Maybe Disk)
 disk = frequency [(7, return Nothing),
                   (3, do elements [(Just n) | n <- [Black, White]])]
 
--- | an instance for generating Arbitrary Sudokus
+-- | an instance for generating Arbitrary Disk
 instance Arbitrary Disk where
   arbitrary =
     do frequency [(5, return Black), (5, return White)]
 
--- | an instance for generating Arbitrary Sudokus
+-- | an instance for generating Arbitrary Board
 instance Arbitrary Board where
   arbitrary =
-    do board <- (sequence [ sequence [ disk | j <- [1..9] ] | i <- [1..9] ])
+    do g <- newStdGen
+       board <- (sequence [ sequence [ disk | j <- [0..m] ] | i <- [0..m] ])
        return (Board (chunksOf (length board) (zip (concat board) pos)))
        where
-         pos = [(i,j) | i <- [1..9], j <- [1..9]]
+         m = randomR (2, 16) g
+         pos = [(i,j) | i <- [0..m], j <- [0..m]]
 
 -- | creates a blank board
 blankBoard :: Int -> Board
@@ -55,7 +56,8 @@ toChar Nothing = '⋅'
 
 -- | returns the disk att the given position
 getDisk :: Board -> Pos -> Maybe Disk
-getDisk b (x,y) = fst(( (mtrx b) !! x ) !! y)
+getDisk b (x,y) | isLegal b (x,y) = fst(( (mtrx b) !! x ) !! y)
+                | otherwise = Nothing
 
 -- | returns opposite color of given disk
 otherDisk :: Maybe Disk -> Maybe Disk

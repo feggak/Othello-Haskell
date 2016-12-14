@@ -1,5 +1,7 @@
 module OthelloUtils where
 
+import OthelloTypes
+
 -- | updates the given list with the new value at the given index
 -- | from the Sudoku lab
 (!!=) :: [a] -> (Int, a) -> [a]
