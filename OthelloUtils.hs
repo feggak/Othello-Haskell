@@ -9,9 +9,9 @@ toChar (Just White) = '●'
 toChar Nothing = '⋅'
 
 -- | returns opposite color of given disk
-otherDisk :: Maybe Disk -> Maybe Disk
-otherDisk (Just White) = Just Black
-otherDisk (Just Black) = Just White
+otherDisk :: Disk -> Maybe Disk
+otherDisk White = Just Black
+otherDisk Black = Just White
 
 -- | updates the given list with the new value at the given index
 -- | from the Sudoku lab
