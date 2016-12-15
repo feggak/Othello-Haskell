@@ -31,7 +31,7 @@ run = do
 -- | main game loop, asks for input and alternates turns for players
 loop :: Board -> Disk -> Disk -> IO ()
 loop board d1 d2
-  | canPlay board (Just d1) = do
+  | canPlay board d1 = do
     putStrLn ""
     printBoard board
     printPlayer d1
@@ -40,7 +40,7 @@ loop board d1 d2
     printPlayer d1
     putStr " vertical pos: "
     posY <- getLine
-    let newBoard = play board (Just d1) (
+    let newBoard = play board d1 (
                      (read posY :: Int) - 1,
                      (read posX :: Int) - 1
                    )
@@ -52,7 +52,7 @@ loop board d1 d2
         setSGR [Reset]
         loop board d1 d2
       Just b -> loop b d2 d1
-  | canPlay board (Just d2) = do
+  | canPlay board d2 = do
     setSGR [SetColor Foreground Vivid Red]
     putStr (show d1)
     putStrLn " can't make a move!"
