@@ -21,7 +21,7 @@ instance Arbitrary Disk where
 -- | parts from Sudoku lab
 instance Arbitrary Board where
   arbitrary =
-    do board <- sequence [ sequence [ disk | j <- [0..7] ] | i <- [0..7] ]
+    do size <- elements [2,4..16]
+       let pos = [(i,j) | i <- [0..size-1], j <- [0..size-1]]
+       board <- sequence [ sequence [ disk | j <- [0..size-1] ] | i <- [0..size-1] ]
        return (Board (chunksOf (length board) (zip (concat board) pos)))
-       where
-         pos = [(i,j) | i <- [0..7], j <- [0..7]]

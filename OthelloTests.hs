@@ -8,7 +8,8 @@ import Test.QuickCheck
 
 -- | checks if the generated blank board of varying size is actually all blanks
 prop_blankBoard_is_blank :: Int -> Bool
-prop_blankBoard_is_blank n | even n && n > 2 = all (all (isNothing . fst)) (mtrx (blankBoard n))
+prop_blankBoard_is_blank n | even n && n > 2 =
+                             all (all (isNothing . fst)) (mtrx (blankBoard n))
                            | otherwise = True
 
 -- | checks if properties of generated boards are valid

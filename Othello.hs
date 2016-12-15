@@ -56,8 +56,8 @@ cellsToFlip' b d (x,y) (z:zs) = rowToFlip b d z (fst z - x, snd z - y)
 -- | returns the row of disks to flip in that direction
 rowToFlip :: Board -> Maybe Disk -> Pos -> Pos -> [Pos]
 rowToFlip b d (x,y) (e,f) | not (isOkRow b d (x,y) (e,f)) = []
-                       | d == getDisk b (x,y) = []
-                       | otherwise = (x,y) : rowToFlip b d (x+e, y+f) (e,f)
+                          | d == getDisk b (x,y) = []
+                          | otherwise = (x,y) : rowToFlip b d (x+e, y+f) (e,f)
 
 -- | checks if there is a valid row in given direction
 isOkRow :: Board -> Maybe Disk -> Pos -> Pos -> Bool
