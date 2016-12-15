@@ -11,7 +11,6 @@ import System.Console.ANSI hiding (White, Black)
 run :: IO ()
 run = do
   setTitle "Othello Game"
-  clearScreen
   putStr "Welcome to "
   setSGR [SetConsoleIntensity BoldIntensity]
   putStr "Othello"
